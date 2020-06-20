@@ -193,8 +193,6 @@ $router->get('/fromAntares',function(){
         $conde  = json_decode($con,true);
 
         $tinggi = $conde['ketinggian'];
-        $tingf  = floatval($tinggi);
-        $ting2  = number_format($tingf, 2, '.', '');
         $status = $conde['status'];
 
         $fromdb = Data::max('def_ct');
@@ -215,7 +213,7 @@ $router->get('/fromAntares',function(){
                         ->count();
             
             if ($banjir5 == 0 || $banjir5 == 60) {
-                sendNotif($ting2,$peringatan,$wkt,$tempat);
+                sendNotif($tinggi,$peringatan,$wkt,$tempat);
             }
         } else if($status == "2"){
             $peringatan = 'SIAGA II';
@@ -226,7 +224,7 @@ $router->get('/fromAntares',function(){
                         ->count();
             
             if ($banjir5 == 0 || $banjir5 == 60) {
-                sendNotif($ting2,$peringatan,$wkt,$tempat);
+                sendNotif($tinggi,$peringatan,$wkt,$tempat);
             }
         } else if($status == "3"){
             $peringatan = 'SIAGA III';
@@ -237,7 +235,7 @@ $router->get('/fromAntares',function(){
                         ->count();
             
             if ($banjir5 == 0|| $banjir5 == 60) {
-                sendNotif($ting2,$peringatan,$wkt,$tempat);
+                sendNotif($tinggi,$peringatan,$wkt,$tempat);
             }
         } else if($status == "4"){
             $peringatan = 'SIAGA IV';
@@ -248,7 +246,7 @@ $router->get('/fromAntares',function(){
                         ->count();
             
             if ($banjir5 == 0|| $banjir5 == 60) {
-                sendNotif($ting2,$peringatan,$wkt,$tempat);
+                sendNotif($tinggi,$peringatan,$wkt,$tempat);
             }
         }
 
@@ -277,7 +275,7 @@ $router->get('/fromAntares',function(){
         } else {
             // memasukkan data ke dalam DB Data
             Data::create([
-                'ketinggian'    => $ting2,
+                'ketinggian'    => $tinggi,
                 'status'        => $status,
                 'def_ct'        => $ct,
                 'tanggal'       => $tglct,
