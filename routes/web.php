@@ -20,6 +20,33 @@ use Illuminate\Support\Facades\Http;
 |
 */
 
+function sendNotif($tinggi='',$peringatan='',$jam='',$tempat='')
+{
+    $auth   = 'key=AAAA-jQJgk8:APA91bGtRzyyKpumauSIbt3WjXvXIdv8DwUNhBpZZvnB-6Ls-APRikAAacH7SBkabwqpRSRp_iJv53sbG-Q2TixrCUQ6ZVkz4DLaUSx_sGQNEN34KnZWfa3Z9cenx-ZkClmfhaQMKuX3';
+    $url    = 'https://fcm.googleapis.com/fcm/send';
+
+    $data   = array(
+        'notification' =>array(
+            'title' => 'Peringatan Dini Banjir',
+            'body' => "Peringatan : ".$peringatan."! \nStatus Pintu air ".$tempat." saat ini ".$peringatan.", ketinggian aktual pada pukul ".$jam." adalah ".$tinggi." m!\n
+            pantau ketinggian pintu air ".$tempat." secara real-time pada aplikasi InaFEWS",
+            'click_action' => 'FLUTTER_NOTIFICATION_CLICK'
+        ),
+        'to' => '/topics/peringatan'
+    );
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL,$url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        'Authorization: '.$auth,
+        "Content-Type: application/json"
+    ));
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    $result = curl_exec($ch);
+}
+
 $router->get('/', function () use ($router) {
     return $router->app->version();
 });
@@ -161,7 +188,6 @@ $router->get('/fromAntares',function(){
         $datect = date_create_from_format('Ymd\THis',$ct);
         $ctAsli = date_format($datect,'Y-m-d H:i:s');
         $tglct  = date_format($datect,'Y-m-d');
-        // $wkt    = date_format($datect,'H:i');
 
         // mendecode data json dari con
         $conde  = json_decode($con,true);
@@ -171,29 +197,60 @@ $router->get('/fromAntares',function(){
         $ting2  = number_format($tingf, 2, '.', '');
         $status = $conde['status'];
 
-        // $fromdb  = DB::select('select def_ct from data order by created_at desc limit 1');
         $fromdb = Data::max('def_ct');
-        // return response()->json($fromdb);die();
 
         // mengambil waktu terbaru dan mengambil data jam, menit, detik untuk jaringan
         date_default_timezone_set("Asia/Jakarta");
         $timeNow    = date('Y-m-d H:i:s');
         $tglNow     = date('Y-m-d');
         $wkt        = date('H:i');
+        $tempat     = 'Katulampa';
 
-        // if($status == "1"){
-        //     //ambil data status = 1 dalam 5 data terakhir
-        //     $banjir5    = Data::orderBy('id','desc')
-        //                 ->limit(5)
-        //                 ->where('status','=','1')
-        //                 ->count();
+        if($status == "1"){
+            $peringatan = 'SIAGA I';
+            //ambil data status = 2 dalam 5 data terakhir
+            $banjir5    = Data::orderBy('id','desc')
+                        ->limit(60)
+                        ->where('status','=','1')
+                        ->count();
             
-        //     if ($banjir5 == 0 || $banjir5 == 5) {
-        //         // lakukan post ke 
-        //     }
-        // } else if($status == "2"){
-
-        // }
+            if ($banjir5 == 0 || $banjir5 == 60) {
+                sendNotif($ting2,$peringatan,$wkt,$tempat);
+            }
+        } else if($status == "2"){
+            $peringatan = 'SIAGA II';
+            //ambil data status = 3 dalam 5 data terakhir
+            $banjir5    = Data::orderBy('id','desc')
+                        ->limit(60)
+                        ->where('status','=','2')
+                        ->count();
+            
+            if ($banjir5 == 0 || $banjir5 == 60) {
+                sendNotif($ting2,$peringatan,$wkt,$tempat);
+            }
+        } else if($status == "3"){
+            $peringatan = 'SIAGA III';
+            //ambil data status = 1 dalam 5 data terakhir
+            $banjir5    = Data::orderBy('id','desc')
+                        ->limit(60)
+                        ->where('status','=','3')
+                        ->count();
+            
+            if ($banjir5 == 0|| $banjir5 == 60) {
+                sendNotif($ting2,$peringatan,$wkt,$tempat);
+            }
+        } else if($status == "4"){
+            $peringatan = 'SIAGA IV';
+            //ambil data status = 1 dalam 5 data terakhir
+            $banjir5    = Data::orderBy('id','desc')
+                        ->limit(60)
+                        ->where('status','=','5')
+                        ->count();
+            
+            if ($banjir5 == 0|| $banjir5 == 60) {
+                sendNotif($ting2,$peringatan,$wkt,$tempat);
+            }
+        }
 
         if ($ct == $fromdb) {
             // deklarasi jam, menit, dan second dari ct
@@ -270,16 +327,4 @@ $router->get('/fromAntares',function(){
             ]);
         }
 
-});
-
-$router->get('/coba', function(){
-    date_default_timezone_set("Asia/Jakarta");
-    $dateNow    = date('Y-m-d');
-
-    $data5  = Data::where('tanggal',$dateNow)
-                ->orderBy('id','desc')
-                ->limit(5)
-                ->count('status','1');
-
-    echo($data5);
 });
